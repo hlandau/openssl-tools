@@ -41,7 +41,8 @@ sub try_add_reviewer {
     if ($rev) {
         my $cla = $query->has_cla(lc $rev);
         if ($cla) {
-            if (!defined $authorrev || $rev ne $authorrev) {
+            # Author can't be a reviewer, unless this is a release
+            if (!defined $authorrev || $rev ne $authorrev || $release) {
                 unless (grep {$_ eq $rev} @reviewers) {
                     $otccount++ if $query->is_member_of($id2, 'otc');
                     push @reviewers, $rev;
@@ -61,6 +62,13 @@ sub try_add_reviewer {
         }
     }
     return $rc;
+}
+
+# Do this here so this works if --release is specified after --reviewer.
+foreach (@ARGV) {
+    if (/^--release$/) {
+	$release = 1;
+    }
 }
 
 foreach (@ARGV) {
@@ -110,8 +118,6 @@ foreach (@ARGV) {
         $WHAT = 'web';
     } elsif (/--tools$/) {
         $WHAT = 'tools'
-    } elsif (/^--release$/) {
-        $release = 1;
     }
 }
 
